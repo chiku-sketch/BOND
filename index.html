@@ -1,0 +1,616 @@
+<!-- BOND IMPLEMENTATION NOTES
+This file intentionally keeps the visual frontend self-contained so the Flask server only needs to serve index.html.
+The prototype calls POST /api/chat with {prompt}.
+The prototype reads GET /api/status for server state.
+The API response expected by this page contains baseline.response, ahi.response and evaluation.
+The page never invents a completed API score before an interaction is run.
+The phrase Awaiting evaluation is intentionally not used.
+Answer text is inserted into bordered response boxes.
+The five-factor table is visible inside the Prototype section after the response panels.
+Five-factor diagnostic values are explicitly labeled diagnostic and provisional.
+They are not presented as validated scientific factor measurements.
+The research section is limited to reference details as requested.
+The framework diagram is SVG rather than a text-only flowchart.
+The five factor cards link to factor.html query routes for the next stage of the build.
+The factor structure follows the supplied BOND research material: five factors and twenty-five sub-factors.
+Initial equal weighting is displayed as 20% per factor.
+Equal weighting is treated as an initial configuration, not an empirical conclusion.
+BOND is framed as complementary to existing AI evaluation approaches.
+End implementation notes -->
+<!-- MASTER BUILD NOTE: Keep BOND UI, API contract, factor labels, and provisional-scoring boundaries consistent across future edits. -->
+<!-- BOND MASTER INDEX | V1.2 | standalone frontend for the Flask prototype -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="BOND — Human–AI Interaction evaluation research prototype.">
+<meta name="theme-color" content="#050505">
+<title>BOND — Human–AI Connection Evaluation</title>
+<style>
+:root{--bg:#050505;--panel:#0b0b0b;--line:#292929;--gold:#e0b52e;--text:#f4f4f4;--muted:#92979d;--soft:#c9cdd2;--green:#55c58a;--red:#e06b6b;--shadow:0 22px 70px rgba(0,0,0,.34)}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:radial-gradient(circle at 50% -10%,#17130a 0%,#050505 34%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.6;min-height:100vh}
+a{color:inherit;text-decoration:none}
+button,input,textarea{font:inherit}
+button{cursor:pointer}
+::selection{background:var(--gold);color:#000}
+.container{width:min(1180px,calc(100% - 40px));margin:auto}
+.section{padding:108px 0;position:relative}
+.eyebrow{color:var(--gold);font-size:12px;letter-spacing:4px;font-weight:800;text-transform:uppercase;margin-bottom:18px}
+h1{font-size:clamp(48px,7vw,92px);line-height:.98;letter-spacing:-4px}
+h2{font-size:clamp(35px,5vw,58px);line-height:1.02;letter-spacing:-2px}
+h3{font-size:22px;line-height:1.2}
+p{color:var(--soft)}
+.gold{color:var(--gold)}
+.muted{color:var(--muted)}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(5,5,5,.90);backdrop-filter:blur(16px);border-bottom:1px solid #1d1d1d}
+.nav{height:72px;display:flex;align-items:center;justify-content:space-between;gap:25px}
+.logo{font-size:24px;font-weight:900;letter-spacing:6px;color:var(--gold)}
+.navlinks{display:flex;align-items:center;gap:28px}
+.navlinks a{color:#c6c6c6;font-size:14px;transition:.2s ease}
+.navlinks a:hover,.navlinks a.active{color:var(--gold)}
+.menu{display:none;background:none;border:1px solid #333;color:#fff;padding:8px 11px;border-radius:8px}
+.hero{min-height:calc(100vh - 72px);display:flex;align-items:center;padding:100px 0 80px}
+.hero-grid{display:grid;grid-template-columns:1.12fr .88fr;gap:65px;align-items:center}
+.hero-copy p{font-size:20px;max-width:720px;margin-top:28px}
+.hero-actions{display:flex;gap:14px;flex-wrap:wrap;margin-top:35px}
+.btn{border:1px solid var(--gold);padding:13px 20px;border-radius:9px;background:var(--gold);color:#050505;font-weight:800;transition:.2s ease}
+.btn:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(224,181,46,.16)}
+.btn.secondary{background:transparent;color:var(--gold)}
+.btn:disabled{opacity:.55;cursor:not-allowed;transform:none;box-shadow:none}
+.hero-mark{min-height:430px;border:1px solid #3a3218;border-radius:24px;background:linear-gradient(145deg,#0f0f0f,#080808);display:grid;place-items:center;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+.hero-mark:before,.hero-mark:after{content:"";position:absolute;border:1px solid rgba(224,181,46,.18);border-radius:50%}
+.hero-mark:before{width:330px;height:330px}.hero-mark:after{width:230px;height:230px}
+.hero-core{width:110px;height:110px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--gold);color:var(--gold);font-weight:900;letter-spacing:3px;background:#0b0b0b;z-index:2;box-shadow:0 0 70px rgba(224,181,46,.08)}
+.hero-node{position:absolute;width:86px;height:46px;border:1px solid #514517;border-radius:10px;background:#0b0b0b;color:#cfcfcf;display:grid;place-items:center;font-size:11px;letter-spacing:1px;text-transform:uppercase;z-index:3}
+.node-u{top:38px;left:50%;transform:translateX(-50%)}.node-c{right:42px;top:50%;transform:translateY(-50%)}.node-p{bottom:42px;left:50%;transform:translateX(-50%)}.node-r{left:42px;top:50%;transform:translateY(-50%)}.node-er{left:50%;top:50%;transform:translate(-50%,126px)}
+.hero-line{position:absolute;background:#3d3418;height:1px;transform-origin:left center;z-index:1}.line-u{width:150px;left:50%;top:100px;transform:rotate(90deg)}.line-c{width:150px;right:105px;top:50%;transform:rotate(180deg)}.line-p{width:150px;left:50%;bottom:100px;transform:rotate(-90deg)}.line-r{width:150px;left:105px;top:50%}.line-er{width:125px;left:50%;top:50%;transform:rotate(90deg)}
+.stat-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:65px}.stat{border:1px solid #252525;border-radius:12px;padding:20px;background:#090909}.stat strong{display:block;color:var(--gold);font-size:26px}.stat span{font-size:12px;color:var(--muted)}
+.section-head{max-width:820px;margin-bottom:50px}.section-head p{margin-top:18px;font-size:18px}
+.panel{border:1px solid #2a2a2a;border-radius:18px;background:linear-gradient(145deg,#0e0e0e,#090909);box-shadow:var(--shadow)}
+.bond-overview{display:grid;grid-template-columns:1fr 1fr;gap:25px}.overview-card{padding:30px}.overview-card h3{margin-bottom:15px}
+.bullet-list{list-style:none;display:grid;gap:13px;margin-top:22px}.bullet-list li{display:flex;gap:12px;color:#c9c9c9}.bullet-list li:before{content:"";width:7px;height:7px;min-width:7px;margin-top:9px;border-radius:50%;background:var(--gold)}
+.scope-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:18px}.scope-item{border:1px solid #242424;border-radius:12px;padding:17px;background:#0b0b0b}.scope-item strong{display:block;margin-bottom:5px}
+.diagram-wrap{padding:40px;margin-top:25px}.diagram-title{text-align:center;margin-bottom:28px}.bond-diagram{width:100%;height:auto;display:block}
+.factor-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}.factor-card{min-height:245px;border:1px solid #2c2c2c;border-radius:16px;padding:22px;background:#0b0b0b;position:relative;overflow:hidden;transition:.22s ease}.factor-card:hover{border-color:#8a7020;transform:translateY(-4px)}
+.factor-code{font-size:12px;color:var(--gold);letter-spacing:2px;font-weight:800}.factor-number{font-size:42px;font-weight:900;line-height:1;margin:25px 0 16px}.factor-card p{font-size:14px}.factor-open{margin-top:22px;color:var(--gold);font-size:13px;font-weight:800}
+.factor-table-wrap,.subfactor-wrap{margin-top:45px;overflow:auto}.subfactor-wrap{margin-top:18px}.factor-table,.subfactor-table{width:100%;border-collapse:separate;border-spacing:0;min-width:760px}.subfactor-table{min-width:900px}.factor-table th,.factor-table td,.subfactor-table th,.subfactor-table td{padding:14px;border-bottom:1px solid #252525;text-align:left}.factor-table th,.subfactor-table th{color:var(--gold);font-size:11px;text-transform:uppercase;letter-spacing:1.5px}.factor-table td,.subfactor-table td{color:#d4d4d4;font-size:13px}
+.formula-stack{display:grid;gap:10px;margin-top:30px}.formula{padding:17px 20px;border:1px solid #262626;border-radius:10px;background:#090909;text-align:center;font-family:"SFMono-Regular",Consolas,monospace;color:#d5d5d5}.formula.main{border-color:#8b6d12;color:var(--gold);font-weight:900}
+.prototype-shell{display:grid;gap:24px}.proto-input{padding:30px}.proto-input textarea{width:100%;min-height:155px;resize:vertical;background:#080808;color:#f2f2f2;border:1px solid #3a3a3a;border-radius:12px;padding:18px;outline:none}.proto-input textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(224,181,46,.08)}.proto-actions{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-top:15px}
+.status-pill{border:1px solid #2a2a2a;border-radius:999px;padding:7px 12px;font-size:12px;color:var(--muted)}.status-pill.online{color:var(--green);border-color:#275f44}.status-pill.error{color:var(--red);border-color:#653030}
+.results-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.ai-box{border:1px solid #303030;border-radius:16px;background:#090909;overflow:hidden}.ai-box.ahi{border-color:#665415}.ai-head{padding:17px 20px;border-bottom:1px solid #292929;display:flex;justify-content:space-between;gap:15px}.ai-head strong{color:var(--gold)}.ai-head span{font-size:11px;color:#7f858b}
+.answer-box{margin:20px;border:1px solid #252525;border-radius:12px;background:#0d0d0d;min-height:170px;padding:18px;white-space:pre-wrap;color:#d8d8d8}.answer-box.empty{color:#666;display:grid;place-items:center;text-align:center}
+.eval-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.score-card{padding:25px}.score-top{display:flex;align-items:end;justify-content:space-between;gap:20px}.score-big{font-size:68px;line-height:1;font-weight:900;color:var(--gold)}.score-label{color:var(--muted);font-size:12px}.metric-list{display:grid;gap:10px;margin-top:25px}.metric-row{display:grid;grid-template-columns:1fr auto;gap:15px;align-items:center;border:1px solid #242424;border-radius:10px;padding:13px 15px;background:#0b0b0b}.metric-row span{color:#aaa}.metric-row strong{color:#eee}
+.comparison{margin-top:20px;padding:20px;border:1px solid #2d2d2d;border-radius:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.compare-item{background:#0b0b0b;border:1px solid #242424;border-radius:10px;padding:15px}.compare-item strong{display:block;font-size:22px;color:var(--gold)}
+.factor-profile{margin-top:20px}.profile-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.profile-item{border:1px solid #252525;border-radius:12px;padding:15px;background:#0b0b0b;text-align:center}.profile-item .v{font-size:25px;font-weight:900;color:var(--gold);display:block}.profile-item .n{font-size:11px;color:#999;display:block;margin-top:4px}.profile-item .w{font-size:10px;color:#666;display:block;margin-top:4px}.profile-title{font-size:12px;color:#999;letter-spacing:1px;text-transform:uppercase;margin:18px 0 10px}
+.note{margin-top:18px;border-left:2px solid var(--gold);padding:12px 15px;background:#0a0a0a;color:#999;font-size:12px}.reference-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.reference{border:1px solid #262626;border-radius:13px;padding:20px;background:#0b0b0b}.reference .tag{color:var(--gold);font-size:11px;letter-spacing:1.5px;font-weight:800}.reference h3{margin:8px 0}.reference p{font-size:13px}
+.footer{padding:45px 0;border-top:1px solid #1d1d1d}.footer-grid{display:flex;justify-content:space-between;gap:25px;align-items:center}.toast{position:fixed;right:22px;bottom:22px;z-index:200;background:#111;border:1px solid #4c401c;color:#eee;padding:13px 17px;border-radius:10px;opacity:0;transform:translateY(15px);pointer-events:none;transition:.25s ease;font-size:13px}.toast.show{opacity:1;transform:translateY(0)}
+@media(max-width:1000px){.hero-grid{grid-template-columns:1fr}.factor-grid{grid-template-columns:repeat(2,1fr)}.profile-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:760px){.container{width:min(100% - 26px,1180px)}.navlinks{position:absolute;left:13px;right:13px;top:67px;background:#090909;border:1px solid #272727;border-radius:12px;padding:12px;display:none;flex-direction:column;align-items:stretch}.navlinks.show{display:flex}.navlinks a{padding:10px}.menu{display:block}.bond-overview,.results-grid,.eval-grid,.reference-grid{grid-template-columns:1fr}.factor-grid{grid-template-columns:1fr}.stat-strip{grid-template-columns:repeat(2,1fr)}.profile-grid{grid-template-columns:repeat(2,1fr)}.comparison{grid-template-columns:1fr}h1{letter-spacing:-2px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+
+/* FINAL MASTER ADDITIONS */
+.question-layout{display:grid;grid-template-columns:280px 1fr;gap:20px;align-items:stretch}
+.question-guide{padding:22px;display:flex;flex-direction:column;gap:15px}
+.question-guide h3{font-size:18px}
+.question-guide p{font-size:13px;line-height:1.7}
+.selector-label{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold);font-weight:800}
+.question-select{width:100%;background:#080808;color:#eee;border:1px solid #363636;border-radius:10px;padding:12px;outline:none}
+.question-select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(224,181,46,.08)}
+.guidance-box{border:1px solid #252525;border-radius:12px;background:#090909;padding:14px}
+.guidance-title{font-size:11px;color:var(--gold);font-weight:800;text-transform:uppercase;letter-spacing:1.3px;margin-bottom:8px}
+.guidance-list{padding-left:17px;display:grid;gap:7px;color:#aaa;font-size:12px}
+.guidance-list li::marker{color:var(--gold)}
+.pros-cons-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.pros-cons-card{padding:24px;min-height:210px}
+.pros-cons-card.pros{border-color:#28583f}.pros-cons-card.cons{border-color:#593434}.pros-cons-card.limits{border-color:#5d4d25}
+.pc-tag{font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;margin-bottom:13px}
+.pros .pc-tag{color:var(--green)}.cons .pc-tag{color:var(--red)}.limits .pc-tag{color:var(--gold)}
+.pros-cons-card ul{list-style:none;display:grid;gap:10px;margin-top:12px}.pros-cons-card li{color:#c5c5c5;font-size:13px;padding-left:17px;position:relative}.pros-cons-card li::before{content:"•";position:absolute;left:0;color:var(--gold)}
+.test-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.test-card{padding:22px;border:1px solid #252525;border-radius:14px;background:#0a0a0a}.test-card h3{font-size:17px;margin-bottom:9px}.test-card p{font-size:13px}.test-prompt{margin-top:12px;padding:12px;border:1px solid #232323;border-radius:9px;color:#aaa;font-size:12px;background:#070707}
+@media(max-width:900px){.hero-grid,.bond-overview,.results-grid,.eval-grid,.question-layout{grid-template-columns:1fr}.factor-grid{grid-template-columns:repeat(2,1fr)}.pros-cons-grid{grid-template-columns:1fr}.test-grid{grid-template-columns:1fr}.profile-grid{grid-template-columns:repeat(3,1fr)}.navlinks{gap:15px}}
+@media(max-width:640px){.container{width:min(100% - 24px,1180px)}.section{padding:75px 0}.nav{height:64px}.navlinks{display:none;position:absolute;top:64px;left:12px;right:12px;padding:14px;flex-direction:column;align-items:stretch;background:#0b0b0b;border:1px solid #292929;border-radius:12px}.navlinks.show{display:flex}.menu{display:block}.factor-grid,.profile-grid,.stat-strip{grid-template-columns:1fr}.hero{min-height:auto;padding-top:70px}.hero-mark{min-height:340px}.score-big{font-size:54px}.comparison{grid-template-columns:1fr}.proto-actions{align-items:stretch;flex-direction:column}}
+
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="container nav">
+    <a href="#home" class="logo">BOND</a>
+    <button class="menu" id="menuBtn" aria-label="Open navigation">☰</button>
+    <nav class="navlinks" id="navLinks">
+      <a href="#home" class="active">Home</a>
+      <a href="#framework" class="">Framework</a>
+      <a href="factor.html" class="">Five Factors</a>
+      <a href="#prototype" class="">Prototype</a>
+      <a href="#testing" class="">Testing</a>
+      <a href="#scope" class="">Scope</a>
+      <a href="#research" class="">Research</a>
+    </nav>
+  </div>
+</header>
+<main>
+<section class="hero section" id="home">
+  <div class="container">
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <div class="eyebrow">Human–AI Interaction Research</div>
+        <h1>Measure the<br><span class="gold">connection.</span></h1>
+        <p>BOND is an experimental framework for evaluating how effectively an AI understands, communicates, adapts, remains dependable, and responds during human–AI interaction.</p>
+        <div class="hero-actions"><a class="btn" href="#prototype">Run Prototype</a><a class="btn secondary" href="#framework">Explore Framework</a></div>
+        <div class="stat-strip">
+          <div class="stat"><strong>5</strong><span>Primary factors</span></div>
+          <div class="stat"><strong>25</strong><span>Sub-factors</span></div>
+          <div class="stat"><strong>1</strong><span>Overall BOND score</span></div>
+          <div class="stat"><strong>V2.0</strong><span>Prototype version</span></div>
+        </div>
+      </div>
+      <div class="hero-mark" aria-label="BOND five-factor visual">
+        <span class="hero-line line-u"></span>
+        <span class="hero-line line-c"></span>
+        <span class="hero-line line-p"></span>
+        <span class="hero-line line-r"></span>
+        <span class="hero-line line-er"></span>
+        <div class="hero-node node-u">U</div>
+        <div class="hero-node node-c">C</div>
+        <div class="hero-node node-p">P</div>
+        <div class="hero-node node-r">R</div>
+        <div class="hero-node node-er">ER</div>
+        <div class="hero-core">BOND</div>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="section" id="framework">
+  <div class="container">
+    <div class="section-head"><div class="eyebrow">Framework</div><h2>What is BOND?</h2><p>BOND is a multidimensional evaluation framework proposed to measure AI-side connection-building capability during human–AI interaction.</p></div>
+    <div class="bond-overview">
+      <article class="panel overview-card"><h3>What BOND does</h3><p>BOND turns an abstract interaction concept into a structured evaluation problem. It focuses on observable AI behavior rather than scoring the human or the complete human–AI relationship.</p><ul class="bullet-list">
+        <li><span><strong>Observe</strong> — AI behavior within a defined interaction.</span></li>
+        <li><span><strong>Measure</strong> — Five primary interaction dimensions.</span></li>
+        <li><span><strong>Diagnose</strong> — Specific strengths and weaknesses through 25 sub-factors.</span></li>
+        <li><span><strong>Compare</strong> — Systems under controlled or matched interaction conditions.</span></li>
+        <li><span><strong>Validate</strong> — The framework through future empirical research.</span></li>
+      </ul></article>
+      <article class="panel overview-card"><h3>What BOND measures</h3><div class="scope-grid">
+        <div class="scope-item"><strong>Understanding</strong><span class="muted">Correct interpretation of human requirements and relevant context.</span></div>
+        <div class="scope-item"><strong>Clarity</strong><span class="muted">Effective communication of the response.</span></div>
+        <div class="scope-item"><strong>Personalization</strong><span class="muted">Appropriate adaptation to relevant user or situation context.</span></div>
+        <div class="scope-item"><strong>Reliability</strong><span class="muted">Consistent and dependable behavior.</span></div>
+        <div class="scope-item"><strong>Engagement & Responsiveness</strong><span class="muted">Effective response as the interaction develops.</span></div>
+      </div></article>
+    </div>
+    <div class="panel diagram-wrap"><div class="diagram-title"><div class="eyebrow">Core architecture</div><h3>AI connection-building capability</h3></div>
+      <svg class="bond-diagram" viewBox="0 0 1000 560" role="img" aria-label="BOND structure diagram">
+        <g fill="none" stroke="#4d401b" stroke-width="2"><path d="M500 280 L500 105"/><path d="M500 280 L790 190"/><path d="M500 280 L710 455"/><path d="M500 280 L290 455"/><path d="M500 280 L210 190"/></g>
+        <g fill="#0b0b0b" stroke="#e0b52e" stroke-width="2"><circle cx="500" cy="280" r="92"/><rect x="415" y="35" width="170" height="70" rx="16"/><rect x="705" y="155" width="170" height="70" rx="16"/><rect x="625" y="420" width="170" height="70" rx="16"/><rect x="205" y="420" width="170" height="70" rx="16"/><rect x="125" y="155" width="170" height="70" rx="16"/></g>
+        <g fill="#f4f4f4" text-anchor="middle" font-family="Inter,system-ui,sans-serif">
+          <text x="500" y="274" font-size="27" font-weight="900">BOND</text><text x="500" y="302" font-size="13" fill="#9aa0a6">AI connection</text><text x="500" y="77" font-size="18" font-weight="800">UNDERSTANDING</text><text x="790" y="197" font-size="18" font-weight="800">CLARITY</text><text x="710" y="462" font-size="18" font-weight="800">PERSONALIZATION</text><text x="290" y="462" font-size="18" font-weight="800">RELIABILITY</text><text x="210" y="197" font-size="18" font-weight="800">ENGAGEMENT</text>
+        </g>
+        <g fill="#9aa0a6" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-size="11"><text x="500" y="93">U</text><text x="790" y="213">C</text><text x="710" y="478">P</text><text x="290" y="478">R</text><text x="210" y="213">ER</text></g>
+      </svg>
+    </div>
+    <div class="panel overview-card" style="margin-top:25px"><h3>Measurement boundary</h3><p>BOND evaluates observable AI-side behavior. It does not claim to measure general intelligence, the complete human–AI relationship, human psychology, human-likeness, or every broader AI quality.</p><div class="note">A capability should not be inferred when the interaction provided no meaningful opportunity to demonstrate it. More personalization is also not automatically better; relevant and appropriate adaptation is the target.</div></div>
+  </div>
+</section>
+<section class="section" id="factors"><div class="container">
+  <div class="section-head"><div class="eyebrow">Five Factors</div><h2>Core architecture.</h2><p>The five primary factors describe different but interacting components of AI connection-building capability.</p></div>
+  <div class="factor-grid">
+    <a class="factor-card" href="factor.html?factor=understanding" aria-label="Open Understanding details"><span class="factor-code">U / 01</span><div class="factor-number">U</div><h3>Understanding</h3><p>Requirement recognition, intent interpretation, context integration, constraint recognition, clarification & update handling</p><div class="factor-open">Open full factor page →</div></a>
+    <a class="factor-card" href="factor.html?factor=clarity" aria-label="Open Clarity details"><span class="factor-code">C / 02</span><div class="factor-number">C</div><h3>Clarity</h3><p>Comprehensibility, structural organization, precision, relevance & focus, explanatory sufficiency</p><div class="factor-open">Open full factor page →</div></a>
+    <a class="factor-card" href="factor.html?factor=personalization" aria-label="Open Personalization details"><span class="factor-code">P / 03</span><div class="factor-number">P</div><h3>Personalization</h3><p>Relevant context recognition, user-level adaptation, preference adaptation, goal & situation adaptation, selective context use</p><div class="factor-open">Open full factor page →</div></a>
+    <a class="factor-card" href="factor.html?factor=reliability" aria-label="Open Reliability details"><span class="factor-code">R / 04</span><div class="factor-number">R</div><h3>Reliability</h3><p>Behavioral consistency, contextual continuity, constraint persistence, uncertainty calibration, error recovery</p><div class="factor-open">Open full factor page →</div></a>
+    <a class="factor-card" href="factor.html?factor=engagement" aria-label="Open Engagement & Responsiveness details"><span class="factor-code">ER / 05</span><div class="factor-number">ER</div><h3>Engagement & Responsiveness</h3><p>Interaction signal recognition, feedback responsiveness, progression awareness, adaptive continuation, goal-oriented engagement</p><div class="factor-open">Open full factor page →</div></a>
+  </div>
+  <div class="panel factor-table-wrap"><table class="factor-table"><thead><tr><th>Factor</th><th>Symbol</th><th>Initial weight</th><th>Sub-factors</th><th>Measurement focus</th></tr></thead><tbody>
+      <tr><td>Understanding</td><td>U</td><td>20%</td><td>5</td><td>Requirement and context interpretation</td></tr>
+      <tr><td>Clarity</td><td>C</td><td>20%</td><td>5</td><td>Effective communication</td></tr>
+      <tr><td>Personalization</td><td>P</td><td>20%</td><td>5</td><td>Relevant adaptation</td></tr>
+      <tr><td>Reliability</td><td>R</td><td>20%</td><td>5</td><td>Dependable behavior</td></tr>
+      <tr><td>Engagement & Responsiveness</td><td>ER</td><td>20%</td><td>5</td><td>Response to evolving interaction</td></tr>
+  </tbody></table></div>
+  <div class="panel overview-card" style="margin-top:20px"><h3>Complete 25-sub-factor structure</h3><p>Each primary factor is decomposed into five observable sub-factors, keeping the overall score connected to specific interaction behaviors.</p><div class="subfactor-wrap"><table class="subfactor-table"><thead><tr><th>Factor</th><th>Code</th><th>Sub-factor</th><th>What it targets</th></tr></thead><tbody>
+      <tr><td>Understanding</td><td>UR</td><td>Requirement Recognition</td><td>Identifies the human’s actual requirement.</td></tr>
+      <tr><td>Understanding</td><td>UI</td><td>Intent Interpretation</td><td>Interprets the intended meaning of the request.</td></tr>
+      <tr><td>Understanding</td><td>UC</td><td>Context Integration</td><td>Uses relevant interaction context.</td></tr>
+      <tr><td>Understanding</td><td>UCR</td><td>Constraint Recognition</td><td>Recognizes explicit constraints and requirements.</td></tr>
+      <tr><td>Understanding</td><td>UU</td><td>Clarification & Update Handling</td><td>Handles ambiguity, correction and changed requirements.</td></tr>
+      <tr><td>Clarity</td><td>CC</td><td>Comprehensibility</td><td>Makes the intended response understandable.</td></tr>
+      <tr><td>Clarity</td><td>CS</td><td>Structural Organization</td><td>Presents information in a logical usable sequence.</td></tr>
+      <tr><td>Clarity</td><td>CP</td><td>Precision</td><td>Communicates meaning directly and precisely.</td></tr>
+      <tr><td>Clarity</td><td>CR</td><td>Relevance & Focus</td><td>Keeps content aligned with the objective.</td></tr>
+      <tr><td>Clarity</td><td>CE</td><td>Explanatory Sufficiency</td><td>Provides enough explanation for the task.</td></tr>
+      <tr><td>Personalization</td><td>PCR</td><td>Relevant Context Recognition</td><td>Identifies context that can meaningfully improve the interaction.</td></tr>
+      <tr><td>Personalization</td><td>PLA</td><td>User-Level Adaptation</td><td>Adapts to the knowledge level supported by interaction evidence.</td></tr>
+      <tr><td>Personalization</td><td>PPA</td><td>Preference Adaptation</td><td>Follows relevant stated interaction preferences.</td></tr>
+      <tr><td>Personalization</td><td>PGS</td><td>Goal & Situation Adaptation</td><td>Adapts to the current objective and situation.</td></tr>
+      <tr><td>Personalization</td><td>PSC</td><td>Selective Context Use</td><td>Uses context selectively rather than forcing personalization.</td></tr>
+      <tr><td>Reliability</td><td>RBC</td><td>Behavioral Consistency</td><td>Maintains appropriate behavior across the interaction.</td></tr>
+      <tr><td>Reliability</td><td>RCC</td><td>Contextual Continuity</td><td>Maintains relevant continuity across turns.</td></tr>
+      <tr><td>Reliability</td><td>RCP</td><td>Constraint Persistence</td><td>Continues to respect relevant constraints.</td></tr>
+      <tr><td>Reliability</td><td>RUC</td><td>Uncertainty Calibration</td><td>Communicates uncertainty appropriately.</td></tr>
+      <tr><td>Reliability</td><td>RER</td><td>Error Recovery</td><td>Recovers appropriately after an error or correction.</td></tr>
+      <tr><td>Engagement & Responsiveness</td><td>ERS</td><td>Interaction Signal Recognition</td><td>Recognizes meaningful interaction signals.</td></tr>
+      <tr><td>Engagement & Responsiveness</td><td>ERF</td><td>Feedback Responsiveness</td><td>Changes behavior appropriately after feedback.</td></tr>
+      <tr><td>Engagement & Responsiveness</td><td>ERP</td><td>Progression Awareness</td><td>Tracks completed, current and upcoming interaction stages.</td></tr>
+      <tr><td>Engagement & Responsiveness</td><td>ERA</td><td>Adaptive Continuation</td><td>Continues naturally after interaction changes.</td></tr>
+      <tr><td>Engagement & Responsiveness</td><td>ERG</td><td>Goal-Oriented Engagement</td><td>Keeps interaction focused on useful progress.</td></tr>
+  </tbody></table></div></div>
+  <div class="formula-stack">
+    <div class="formula">U = (UR + UI + UC + UCR + UU) / 5</div>
+    <div class="formula">C = (CC + CS + CP + CR + CE) / 5</div>
+    <div class="formula">P = (PCR + PLA + PPA + PGS + PSC) / 5</div>
+    <div class="formula">R = (RBC + RCC + RCP + RUC + RER) / 5</div>
+    <div class="formula">ER = (ERS + ERF + ERP + ERA + ERG) / 5</div>
+    <div class="formula main">BOND = (U + C + P + R + ER) / 5</div></div>
+</div></section>
+<section class="section" id="prototype"><div class="container">
+  <div class="section-head"><div class="eyebrow">Prototype</div><h2>Baseline vs AHI.</h2><p>Run the same prompt through the baseline model and the AHI-enhanced interaction layer. Responses remain inside their boxes and evaluation appears only after the API returns.</p></div>
+  <div class="prototype-shell">
+    <div class="question-layout">
+  <aside class="panel question-guide" aria-label="Question type guidance">
+    <div><div class="eyebrow">Question Guide</div><h3>Choose what to test</h3></div>
+    <p>Select the interaction category before writing the prompt. The selector is guidance only and does <strong>not</strong> change the BOND scoring engine.</p>
+    <label class="selector-label" for="questionType">Question Type</label>
+    <select id="questionType" class="question-select">
+      <option value="general">General Explanation</option>
+      <option value="educational">Educational</option>
+      <option value="science">Science / Technical</option>
+      <option value="comparison">Comparison</option>
+      <option value="reasoning">Reasoning / Analysis</option>
+      <option value="structured">Structured / Table</option>
+      <option value="summary">Summarization</option>
+      <option value="multi-turn">Multi-turn Interaction</option>
+    </select>
+    <div class="guidance-box">
+      <div class="guidance-title">Recommended</div>
+      <ul class="guidance-list" id="guidanceList"><li>State the objective clearly.</li><li>Include important constraints.</li><li>Use the same prompt for matched comparisons.</li></ul>
+    </div>
+    <div class="guidance-box">
+      <div class="guidance-title">Limitations of this test box</div>
+      <ul class="guidance-list"><li>It cannot guarantee factual correctness.</li><li>It is not a general intelligence test.</li><li>Results are provisional research diagnostics.</li></ul>
+    </div>
+  </aside>
+  <div class="panel proto-input">
+    <div class="eyebrow">Interaction Prompt</div>
+    <textarea id="promptInput" aria-label="Prototype prompt">Explain artificial intelligence in 2 short sentences for a beginner. Do not use technical terminology.</textarea>
+    <div class="proto-actions"><span id="serverStatus" class="status-pill">Checking AI server…</span><button id="runBtn" class="btn">Run Interaction</button></div>
+  </div>
+</div>
+    <div class="results-grid">
+      <article class="ai-box"><div class="ai-head"><strong>BASELINE AI</strong><span>Base model</span></div><div id="baselineAnswer" class="answer-box empty">Run the interaction to generate the baseline response.</div></article>
+      <article class="ai-box ahi"><div class="ai-head"><strong>AHI AI</strong><span>Interaction enhancement layer</span></div><div id="ahiAnswer" class="answer-box empty">Run the interaction to generate the AHI response.</div></article>
+    </div>
+    <div class="eval-grid">
+      <article class="panel score-card"><div class="score-top"><div><div class="score-label">BASELINE BOND</div><div id="baselineScore" class="score-big">—</div></div><div class="score-label">0–1 normalized</div></div><div class="metric-list"><div class="metric-row"><span>Constraint following</span><strong id="baselineConstraint">—</strong></div><div class="metric-row"><span>Response quality</span><strong id="baselineQuality">—</strong></div></div></article>
+      <article class="panel score-card"><div class="score-top"><div><div class="score-label">AHI BOND</div><div id="ahiScore" class="score-big">—</div></div><div class="score-label">0–1 normalized</div></div><div class="metric-list"><div class="metric-row"><span>Constraint following</span><strong id="ahiConstraint">—</strong></div><div class="metric-row"><span>Response quality</span><strong id="ahiQuality">—</strong></div></div></article>
+    </div>
+    <div class="panel score-card"><div class="eyebrow">BOND Comparison</div><h3>Matched interaction result</h3><div class="comparison">
+      <div class="compare-item"><span class="muted">Difference</span><strong id="difference">—</strong></div>
+      <div class="compare-item"><span class="muted">Improvement</span><strong id="improvement">—</strong></div>
+      <div class="compare-item"><span class="muted">Winner</span><strong id="winner">—</strong></div>
+    </div><div class="note">This prototype evaluator is transparent and provisional. Its numerical score should not be presented as a validated scientific measurement. The research direction calls for empirical validation of factors, weights and scoring.</div></div>
+    <div class="panel score-card factor-profile"><div class="eyebrow">Five-Factor Profile</div><h3>Prototype diagnostic table</h3><div class="profile-title">Baseline diagnostic indicators</div><div class="profile-grid" id="profileBaseline"></div><div class="profile-title">AHI diagnostic indicators</div><div class="profile-grid" id="profileAhi"></div><div class="note">These five displayed values are diagnostic indicators derived from available response/evaluation signals. They are not presented as empirically validated factor scores.</div></div>
+  </div></div></section>
+<section class="section" id="scope"><div class="container">
+  <div class="section-head"><div class="eyebrow">Interpretation</div><h2>Pros, Cons & Limitations.</h2><p>A clear research prototype should show what the framework is useful for, where it can be difficult to apply, and what its current scores cannot establish.</p></div>
+  <div class="pros-cons-grid">
+    <article class="panel pros-cons-card pros"><div class="pc-tag">Pros</div><h3>What BOND enables</h3><ul><li>Separates interaction quality into five interpretable dimensions.</li><li>Provides diagnostic sub-factors instead of only one opaque number.</li><li>Supports matched Baseline vs AHI comparisons.</li><li>Makes assumptions, weighting and measurement boundaries visible.</li><li>Creates a structure that can later be tested and empirically validated.</li></ul></article>
+    <article class="panel pros-cons-card cons"><div class="pc-tag">Cons</div><h3>Current trade-offs</h3><ul><li>Some interaction qualities are inherently context-dependent.</li><li>Automated heuristic scoring can miss nuanced human judgments.</li><li>Equal weighting may not reflect eventual empirical importance.</li><li>Short interactions may not provide evidence for every sub-factor.</li><li>A small prototype model can limit the quality of observed responses.</li></ul></article>
+    <article class="panel pros-cons-card limits"><div class="pc-tag">Limitations</div><h3>What the score does not prove</h3><ul><li>It does not establish general intelligence or AGI capability.</li><li>It does not measure consciousness or human psychological attachment.</li><li>It does not guarantee factual accuracy, safety or domain expertise.</li><li>Displayed factor values are diagnostic/provisional, not validated scientific measurements.</li><li>Empirical studies are required before treating weights or scores as established metrics.</li></ul></article>
+  </div>
+  <div class="panel overview-card" style="margin-top:20px"><h3>Interpretation rule</h3><p>A missing opportunity should not automatically become a failure. If a prompt provides no meaningful evidence for a capability, the evaluator should avoid inferring that capability from silence. Likewise, more personalization is not automatically better; relevant and appropriate adaptation is the target.</p></div>
+</div></section>
+<section class="section" id="testing"><div class="container">
+  <div class="section-head"><div class="eyebrow">Testing</div><h2>Controlled test set.</h2><p>Use matched prompts to compare Baseline and AHI behavior across different interaction demands.</p></div>
+  <div class="test-grid">
+    <article class="test-card" data-prompt="Explain gravity in exactly one short sentence without technical terminology."><h3>01 / Constraint following</h3><p>Tests whether explicit requirements survive from prompt to response.</p><div class="test-prompt">“Explain gravity in exactly one short sentence without technical terminology.”</div></article>
+    <article class="test-card" data-prompt="I am a beginner learning physics. Explain why astronauts appear weightless."><h3>02 / Context understanding</h3><p>Tests whether the response uses relevant context rather than answering generically.</p><div class="test-prompt">“I am a beginner learning physics. Explain why astronauts appear weightless.”</div></article>
+    <article class="test-card" data-prompt="Compare solar and wind energy for a school project in a compact table."><h3>03 / Comparison</h3><p>Tests organization, relevance and balanced handling of alternatives.</p><div class="test-prompt">“Compare solar and wind energy for a school project in a compact table.”</div></article>
+    <article class="test-card" data-prompt="Use two short bullet points and keep the key idea."><h3>04 / Correction & update</h3><p>Tests whether the system can respond appropriately after a changed requirement.</p><div class="test-prompt">“Use three bullet points.” Then: “Actually, make it two and keep the key idea.”</div></article>
+  </div>
+</div></section>
+<section class="section" id="research"><div class="container">
+  <div class="section-head"><div class="eyebrow">Research</div><h2>References.</h2><p>Reference details used to position BOND alongside existing AI and interaction evaluation approaches.</p></div><div class="reference-grid">
+    <article class="reference"><span class="tag">01 / HUMAN EVALUATION</span><h3>Human evaluation</h3><p><strong>Direct human assessment</strong></p><p>The BOND research discusses direct human assessment for context-dependent qualities such as helpfulness, relevance, clarity, instruction-following and preference.</p></article>
+    <article class="reference"><span class="tag">02 / MODEL JUDGING</span><h3>LLM-as-a-Judge</h3><p><strong>Scalable model-based evaluation</strong></p><p>The research discusses model-based judging as scalable while emphasizing evaluator reliability and systematic bias concerns.</p></article>
+    <article class="reference"><span class="tag">03 / MULTI-TURN</span><h3>MT-Bench</h3><p><strong>Multi-turn conversational evaluation</strong></p><p>MT-Bench is discussed as an example of evaluating chat assistants across developing multi-turn conversations.</p></article>
+    <article class="reference"><span class="tag">04 / HUMAN PREFERENCE</span><h3>Chatbot Arena</h3><p><strong>Pairwise human preference</strong></p><p>Chatbot Arena is discussed as a human-preference comparison method that captures overall preference but not every diagnostic dimension.</p></article>
+    <article class="reference"><span class="tag">05 / BROAD CAPABILITY</span><h3>MMLU</h3><p><strong>Knowledge and problem solving</strong></p><p>MMLU is discussed as a broad capability benchmark; capability performance does not automatically establish effective human interaction.</p></article>
+    <article class="reference"><span class="tag">06 / MULTIDIMENSIONAL</span><h3>HELM</h3><p><strong>Multi-scenario evaluation</strong></p><p>HELM is discussed as an example of multidimensional evaluation using broad scenario and metric coverage.</p></article>
+    <article class="reference"><span class="tag">07 / REFERENCE METRICS</span><h3>BLEU & ROUGE</h3><p><strong>Reference-based text metrics</strong></p><p>The research positions BLEU and ROUGE as useful task-specific metrics that do not by themselves measure AI-side connection-building.</p></article>
+    <article class="reference"><span class="tag">08 / PRIMARY SOURCE</span><h3>BOND V1 Research Document</h3><p><strong>Framework source</strong></p><p>The BOND research document defines the proposed five-factor structure, 25 sub-factors, scoring principles, boundaries and future validation directions.</p></article>
+  </div><div class="panel overview-card" style="margin-top:20px"><h3>Reference boundary</h3><p>These references are presented as related evaluation approaches discussed in the BOND research material. BOND is positioned as complementary and does not replace task, factuality, safety, reasoning, domain-specific or general capability evaluation.</p></div>
+</div></section>
+</main>
+<footer class="footer"><div class="container footer-grid"><div><div class="logo">BOND</div><p style="margin-top:7px;font-size:12px">Human–AI Interaction Research Prototype</p></div><div class="muted" style="font-size:12px">BOND-V2.0 • Baseline + AHI + Transparent Provisional Evaluation</div></div></footer>
+<div id="toast" class="toast"></div>
+<script>
+const API_BASE = "";
+const promptInput = document.getElementById("promptInput");
+const runBtn = document.getElementById("runBtn");
+const serverStatus = document.getElementById("serverStatus");
+const baselineAnswer = document.getElementById("baselineAnswer");
+const ahiAnswer = document.getElementById("ahiAnswer");
+const baselineScore = document.getElementById("baselineScore");
+const ahiScore = document.getElementById("ahiScore");
+const baselineConstraint = document.getElementById("baselineConstraint");
+const ahiConstraint = document.getElementById("ahiConstraint");
+const baselineQuality = document.getElementById("baselineQuality");
+const ahiQuality = document.getElementById("ahiQuality");
+const difference = document.getElementById("difference");
+const improvement = document.getElementById("improvement");
+const winner = document.getElementById("winner");
+const toast = document.getElementById("toast");
+const menuBtn = document.getElementById("menuBtn");
+const navLinks = document.getElementById("navLinks");
+
+function showToast(message){
+    toast.textContent = message;
+    toast.classList.add("show");
+    clearTimeout(showToast.timer);
+    showToast.timer = setTimeout(() => toast.classList.remove("show"), 3000);
+}
+
+function formatScore(value){
+    if(value === null || value === undefined || Number.isNaN(Number(value))){ return "—"; }
+    return Number(value).toFixed(3);
+}
+
+
+function normalizeResponseValue(value){
+    if(value === null || value === undefined){ return ""; }
+    if(typeof value === "string"){
+        const trimmed = value.trim();
+        if(!trimmed){ return ""; }
+        if(/^AHI-V\d/i.test(trimmed) || /^BOND-V\d/i.test(trimmed)){ return ""; }
+        return trimmed;
+    }
+    if(typeof value === "number" || typeof value === "boolean"){ return String(value); }
+    if(typeof value === "object"){
+        const keys = ["response","content","text","answer","message"];
+        for(const key of keys){
+            const found = normalizeResponseValue(value[key]);
+            if(found){ return found; }
+        }
+    }
+    return "";
+}
+
+function extractResponseText(data, kind){
+    if(!data){ return ""; }
+    if(kind === "baseline"){
+        return normalizeResponseValue(data.baseline?.response)
+            || normalizeResponseValue(data.baseline_response)
+            || normalizeResponseValue(data.baseline);
+    }
+    return normalizeResponseValue(data.ahi_response?.response)
+        || normalizeResponseValue(data.ahi?.response)
+        || normalizeResponseValue(data.ahi_response)
+        || (data.ahi && typeof data.ahi === "object" ? normalizeResponseValue(data.ahi) : "");
+}
+
+function setAnswer(element,text){
+    element.classList.remove("empty");
+    element.textContent = text || "No response returned.";
+}
+
+function setMetric(element,value){ element.textContent = formatScore(value); }
+
+function escapeHtml(value){
+    return String(value ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+}
+
+function clamp01(value){ return Math.max(0,Math.min(1,Number(value)||0)); }
+
+function words(text){ return String(text || "").toLowerCase().match(/\b[a-zA-Z]{4,}\b/g) || []; }
+
+function overlapScore(prompt,response){
+    const promptWords = new Set(words(prompt));
+    const responseWords = new Set(words(response));
+    if(!promptWords.size){ return 0; }
+    let hit = 0;
+    for(const word of promptWords){ if(responseWords.has(word)){ hit++; } }
+    return clamp01(hit / promptWords.size);
+}
+
+function longWordPenalty(response){
+    const ws = String(response || "").match(/\b[a-zA-Z]+\b/g) || [];
+    if(!ws.length){ return 0; }
+    const long = ws.filter(word => word.length >= 13).length / ws.length;
+    if(long <= 0.05){ return 1; }
+    if(long <= 0.10){ return 0.85; }
+    if(long <= 0.18){ return 0.65; }
+    return 0.40;
+}
+
+function sentenceCount(text){
+    const clean = String(text || "").trim();
+    if(!clean){ return 0; }
+    return clean.split(/(?<=[.!?])\s+/).filter(Boolean).length;
+}
+
+function requestedSentences(prompt){
+    const patterns = [/(\d+)\s+short\s+sentences?/i,/(\d+)\s+sentences?/i,/in\s+(\d+)\s+sentences?/i];
+    for(const pattern of patterns){
+        const match = String(prompt).match(pattern);
+        if(match){ return Number(match[1]); }
+    }
+    return null;
+}
+
+function localConstraintScore(prompt,response){
+    const p = String(prompt || "").toLowerCase();
+    const r = String(response || "");
+    const checks = [];
+    const required = requestedSentences(p);
+    if(required !== null){ checks.push(sentenceCount(r) === required ? 1 : 0); }
+    if(p.includes("simple language") || p.includes("beginner") || p.includes("easy to understand")){ checks.push(longWordPenalty(r)); }
+    if(p.includes("no technical terminology") || p.includes("do not use technical terminology") || p.includes("without technical terminology")){
+        const technical = ["algorithm","neural network","machine learning","deep learning","backpropagation","gradient descent","transformer","embedding","tokenization","inference","dataset","parameters","classification","regression","optimization","architecture","natural language processing","computer vision","reinforcement learning","quantization","latent space","attention mechanism","api","gpu","cpu"];
+        const lower = r.toLowerCase();
+        checks.push(technical.some(term => lower.includes(term)) ? 0 : 1);
+    }
+    if(!checks.length){ return 1; }
+    return checks.reduce((a,b) => a+b,0) / checks.length;
+}
+
+function localQualityScore(prompt,response){
+    if(!String(response || "").trim()){ return 0; }
+    let score = 0.25;
+    const overlap = overlapScore(prompt,response);
+    if(overlap >= 0.50){ score += 0.35; }
+    else if(overlap >= 0.25){ score += 0.25; }
+    else if(overlap > 0){ score += 0.15; }
+    const count = words(response).length;
+    if(count >= 8){ score += 0.20; }
+    else if(count >= 4){ score += 0.12; }
+    else{ score += 0.05; }
+    if(sentenceCount(response) >= 1){ score += 0.20; }
+    return clamp01(score);
+}
+
+function deriveFactorProfile(prompt,response,evaluation){
+    const constraint = Number(evaluation?.constraint_score ?? localConstraintScore(prompt,response));
+    const quality = Number(evaluation?.quality_score ?? localQualityScore(prompt,response));
+    const overlap = overlapScore(prompt,response);
+    const clarity = longWordPenalty(response);
+    const hasContextCue = /\b(my|me|i|user|beginner|student|goal|prefer|preference|earlier|previous|context)\b/i.test(prompt);
+    const personalization = hasContextCue ? clamp01(0.45 * overlap + 0.55 * constraint) : clamp01(0.50 + 0.25 * quality);
+    const reliability = clamp01(0.70 * constraint + 0.30 * quality);
+    const engagement = clamp01(0.35 * quality + 0.35 * constraint + 0.30 * overlap);
+    const understanding = clamp01(0.55 * overlap + 0.45 * quality);
+    return {U:understanding,C:clarity,P:personalization,R:reliability,ER:engagement};
+}
+
+function renderProfile(target,profile){
+    const labels = [["U","Understanding"],["C","Clarity"],["P","Personalization"],["R","Reliability"],["ER","Engagement & Responsiveness"]];
+    target.innerHTML = labels.map(([code,name]) => `
+        <div class="profile-item">
+            <span class="v">${formatScore(profile[code])}</span>
+            <span class="n">${escapeHtml(name)}</span>
+            <span class="w">diagnostic</span>
+        </div>
+    `).join("");
+}
+
+
+const questionType = document.getElementById("questionType");
+const guidanceList = document.getElementById("guidanceList");
+const guidance = {
+    general:["State the objective clearly.","Include important constraints.","Use the same prompt for matched comparisons."],
+    educational:["State the learner level.","Specify the desired depth or format.","Check whether the explanation stays understandable."],
+    science:["Define the concept or problem precisely.","Specify the expected level of technical detail.","Separate explanation quality from factual verification."],
+    comparison:["Name the items being compared.","Specify the comparison criteria when possible.","Keep the same criteria for both systems."],
+    reasoning:["State the actual decision or analysis goal.","Include relevant assumptions or constraints.","Evaluate whether the answer addresses the reasoning task."],
+    structured:["Specify the required structure.","Name required columns, bullets or sections.","Check both content and structural compliance."],
+    summary:["Provide or reference the source material.","State desired length or format.","Check whether important meaning is preserved."],
+    "multi-turn":["Keep the interaction history relevant.","Introduce a meaningful update or correction.","Check continuity and response to feedback."]
+};
+function updateGuidance(){
+    if(!guidanceList || !questionType) return;
+    guidanceList.innerHTML = (guidance[questionType.value] || guidance.general).map(item => `<li>${escapeHtml(item)}</li>`).join("");
+}
+if(questionType){ questionType.addEventListener("change",updateGuidance); updateGuidance(); }
+
+async function checkStatus(){
+    try{
+        const response = await fetch(`${API_BASE}/api/status`,{cache:"no-store"});
+        const data = await response.json();
+        if(data.ai_server){
+            serverStatus.textContent = "AI server online";
+            serverStatus.className = "status-pill online";
+        }else{
+            serverStatus.textContent = "AI server offline";
+            serverStatus.className = "status-pill error";
+        }
+    }catch(error){
+        serverStatus.textContent = "Backend unavailable";
+        serverStatus.className = "status-pill error";
+    }
+}
+
+async function runInteraction(){
+    const prompt = promptInput.value.trim();
+    if(!prompt){ showToast("Please enter a prompt."); promptInput.focus(); return; }
+    runBtn.disabled = true;
+    runBtn.textContent = "Running…";
+    serverStatus.textContent = "Evaluating interaction…";
+    serverStatus.className = "status-pill";
+    baselineAnswer.textContent = "Generating baseline response…";
+    baselineAnswer.classList.add("empty");
+    ahiAnswer.textContent = "Generating AHI response…";
+    ahiAnswer.classList.add("empty");
+    try{
+        const response = await fetch(`${API_BASE}/api/chat`,{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({prompt})
+        });
+        const data = await response.json();
+        if(!response.ok || !data.success){ throw new Error(data.error || "Prototype request failed."); }
+        const baselineText = extractResponseText(data, "baseline");
+        const ahiText = extractResponseText(data, "ahi");
+        setAnswer(baselineAnswer, baselineText);
+        setAnswer(ahiAnswer, ahiText);
+        const evaluation = data.evaluation || {};
+        const baseline = evaluation.baseline || {};
+        const ahiEval = evaluation.ahi || {};
+        const comparison = evaluation.comparison || {};
+        setMetric(baselineScore, baseline.score);
+        setMetric(ahiScore, ahiEval.score);
+        setMetric(baselineConstraint, baseline.constraint_score);
+        setMetric(ahiConstraint, ahiEval.constraint_score);
+        setMetric(baselineQuality, baseline.quality_score);
+        setMetric(ahiQuality, ahiEval.quality_score);
+        difference.textContent = (Number(ahiEval.score || 0) - Number(baseline.score || 0)).toFixed(3);
+        improvement.textContent = Number(comparison.improvement_percent || 0).toFixed(2) + "%";
+        winner.textContent = comparison.winner || "—";
+        renderProfile(document.getElementById("profileBaseline"), deriveFactorProfile(prompt, baselineText, baseline));
+        renderProfile(document.getElementById("profileAhi"), deriveFactorProfile(prompt, ahiText, ahiEval));
+        serverStatus.textContent = "Evaluation complete";
+        serverStatus.className = "status-pill online";
+        showToast("Interaction evaluated.");
+    }catch(error){
+        baselineAnswer.textContent = "Unable to generate baseline response.";
+        ahiAnswer.textContent = "Unable to generate AHI response.";
+        baselineAnswer.classList.add("empty");
+        ahiAnswer.classList.add("empty");
+        serverStatus.textContent = "Evaluation error";
+        serverStatus.className = "status-pill error";
+        showToast(error.message);
+    }finally{
+        runBtn.disabled = false;
+        runBtn.textContent = "Run Interaction";
+    }
+}
+
+document.querySelectorAll(".test-card[data-prompt]").forEach(card => {
+    card.style.cursor = "pointer";
+    card.addEventListener("click", () => {
+        promptInput.value = card.getAttribute("data-prompt");
+        promptInput.focus();
+        document.getElementById("prototype")?.scrollIntoView({behavior:"smooth"});
+        showToast("Test prompt loaded. Click Run Interaction.");
+    });
+});
+runBtn.addEventListener("click",runInteraction);
+promptInput.addEventListener("keydown",event => { if((event.ctrlKey || event.metaKey) && event.key === "Enter"){ runInteraction(); } });
+menuBtn.addEventListener("click",() => navLinks.classList.toggle("show"));
+document.querySelectorAll(".navlinks a").forEach(link => link.addEventListener("click",() => navLinks.classList.remove("show")));
+const sections = [...document.querySelectorAll("main section[id]")];
+const navItems = [...document.querySelectorAll(".navlinks a")];
+const observer = new IntersectionObserver(entries => { entries.forEach(entry => { if(entry.isIntersecting){ navItems.forEach(item => item.classList.toggle("active",item.getAttribute("href") === "#" + entry.target.id)); } }); },{rootMargin:"-35% 0px -55% 0px",threshold:0});
+sections.forEach(section => observer.observe(section));
+checkStatus();
+</script>
+</body>
+</html>

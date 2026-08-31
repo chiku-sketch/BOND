@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BOND — Five Factors & 25 Sub-Factors</title>
+
+<style>
+/* =========================================================
+   BOND FACTOR RESEARCH PAGE
+   Five Factors / 25 Sub-Factors
+   Companion page to the locked BOND index.html
+   ========================================================= */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+:root {
+    --black: #050505;
+    --black-soft: #0b0b0b;
+    --black-card: #111111;
+    --black-card-2: #151515;
+    --gold: #d4af37;
+    --gold-light: #f0d77a;
+    --gold-dark: #8f741d;
+    --white: #f5f5f5;
+    --gray: #a8a8a8;
+    --gray-dark: #777;
+    --border: rgba(212,175,55,.25);
+    --border-soft: rgba(255,255,255,.08);
+    --max-width: 1200px;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background:
+        radial-gradient(circle at 50% -10%, rgba(212,175,55,.08), transparent 35%),
+        var(--black);
+    color: var(--white);
+    line-height: 1.6;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.navbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    min-height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    background: rgba(5,5,5,.90);
+    backdrop-filter: blur(15px);
+    border-bottom: 1px solid rgba(212,175,55,.15);
+}
+
+.logo {
+    color: var(--gold);
+    font-size: 25px;
+    font-weight: 800;
+    letter-spacing: 4px;
+}
+
+.navbar nav {
+    display: flex;
+    gap: 28px;
+    flex-wrap: wrap;
+}
+
+.navbar nav a {
+    color: #d0d0d0;
+    font-size: 14px;
+    transition: .25s ease;
+}
+
+.navbar nav a:hover,
+.navbar nav a.active {
+    color: var(--gold-light);
+}
+
+.hero {
+    max-width: var(--max-width);
+    margin: auto;
+    min-height: 55vh;
+    padding: 110px 30px 80px;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero::after {
+    content: "";
+    position: absolute;
+    width: 420px;
+    height: 420px;
+    right: -160px;
+    top: 50px;
+    border: 1px solid rgba(212,175,55,.12);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 850px;
+}
+
+.eyebrow {
+    color: var(--gold);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+}
+
+.hero h1 {
+    font-size: clamp(50px, 8vw, 92px);
+    line-height: 1;
+    margin-bottom: 22px;
+    background: linear-gradient(135deg,#fff5b0,var(--gold),#8f741d);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.hero h2 {
+    font-size: clamp(22px,3vw,34px);
+    font-weight: 500;
+    margin-bottom: 22px;
+}
+
+.hero p.description {
+    max-width: 780px;
+    color: var(--gray);
+    font-size: 18px;
+}
+
+.hero-meta {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 30px;
+}
+
+.meta-pill {
+    border: 1px solid var(--border);
+    background: rgba(212,175,55,.04);
+    border-radius: 999px;
+    padding: 8px 14px;
+    color: #c9c9c9;
+    font-size: 12px;
+}
+
+.meta-pill strong {
+    color: var(--gold);
+}
+
+.section {
+    max-width: var(--max-width);
+    margin: auto;
+    padding: 80px 30px;
+}
+
+.section-title {
+    margin-bottom: 34px;
+}
+
+.section-title h2 {
+    font-size: clamp(30px,5vw,52px);
+    line-height: 1.1;
+}
+
+.section-title p {
+    color: var(--gray);
+    max-width: 760px;
+    margin-top: 14px;
+}
+
+.factor-index {
+    display: grid;
+    grid-template-columns: repeat(5,1fr);
+    gap: 12px;
+    margin-top: 35px;
+}
+
+.index-link {
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: #0c0c0c;
+    transition: .25s ease;
+}
+
+.index-link:hover {
+    transform: translateY(-3px);
+    border-color: rgba(212,175,55,.7);
+}
+
+.index-link span {
+    display: block;
+    color: var(--gold);
+    font-size: 11px;
+    letter-spacing: 2px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.index-link strong {
+    font-size: 14px;
+}
+
+.factor {
+    scroll-margin-top: 90px;
+    padding: 95px 30px;
+    max-width: var(--max-width);
+    margin: auto;
+    border-top: 1px solid rgba(212,175,55,.12);
+}
+
+.factor-header {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 26px;
+    align-items: start;
+    margin-bottom: 36px;
+}
+
+.factor-number {
+    width: 82px;
+    height: 82px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--gold);
+    border-radius: 12px;
+    color: var(--gold);
+    font-size: 24px;
+    font-weight: 800;
+    background: rgba(212,175,55,.04);
+}
+
+.factor-header h2 {
+    font-size: clamp(30px,4vw,48px);
+    line-height: 1.1;
+}
+
+.factor-header p {
+    color: var(--gray);
+    max-width: 800px;
+    margin-top: 12px;
+}
+
+.factor-summary {
+    display: grid;
+    grid-template-columns: 1.5fr .7fr;
+    gap: 18px;
+    margin-bottom: 28px;
+}
+
+.summary-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: linear-gradient(145deg,#111,#090909);
+    padding: 25px;
+}
+
+.summary-card h3 {
+    color: var(--gold);
+    font-size: 14px;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+}
+
+.summary-card p {
+    color: #b7b7b7;
+    font-size: 14px;
+}
+
+.weight {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+}
+
+.weight strong {
+    color: var(--gold);
+    font-size: 34px;
+}
+
+.weight span {
+    color: #888;
+    font-size: 12px;
+}
+
+.subfactor-grid {
+    display: grid;
+    grid-template-columns: repeat(2,1fr);
+    gap: 14px;
+}
+
+.subfactor {
+    position: relative;
+    padding: 22px;
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    background: #0c0c0c;
+    overflow: hidden;
+    transition: .25s ease;
+}
+
+.subfactor::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--gold);
+    transform: scaleY(0);
+    transform-origin: bottom;
+    transition: .25s ease;
+}
+
+.subfactor:hover {
+    transform: translateY(-3px);
+    border-color: var(--border);
+}
+
+.subfactor:hover::before {
+    transform: scaleY(1);
+}
+
+.code {
+    color: var(--gold);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 2px;
+}
+
+.subfactor h3 {
+    font-size: 18px;
+    margin: 7px 0;
+}
+
+.subfactor p {
+    color: #999;
+    font-size: 14px;
+}
+
+.measure {
+    margin-top: 13px;
+    padding-top: 12px;
+    border-top: 1px solid #202020;
+    color: #bdbdbd;
+    font-size: 12px;
+}
+
+.measure strong {
+    color: #ddd;
+}
+
+.formula-section {
+    border-top: 1px solid rgba(212,175,55,.15);
+    border-bottom: 1px solid rgba(212,175,55,.15);
+    background: #080808;
+}
+
+.formula-grid {
+    display: grid;
+    grid-template-columns: repeat(2,1fr);
+    gap: 18px;
+}
+
+.formula-card {
+    border: 1px solid var(--border);
+    background: #0d0d0d;
+    border-radius: 10px;
+    padding: 24px;
+}
+
+.formula-card h3 {
+    color: var(--gold);
+    margin-bottom: 14px;
+}
+
+.formula {
+    display: block;
+    padding: 16px;
+    border-radius: 7px;
+    background: #050505;
+    border: 1px solid #222;
+    color: #eee;
+    font-family: "Courier New", monospace;
+    font-size: 14px;
+    overflow-x: auto;
+}
+
+.formula-card p {
+    color: #8f8f8f;
+    font-size: 12px;
+    margin-top: 12px;
+}
+
+.complete {
+    grid-column: 1 / -1;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+    margin-top: 35px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 780px;
+    background: #0c0c0c;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+th, td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #242424;
+    text-align: left;
+}
+
+th {
+    color: var(--gold);
+    font-size: 13px;
+}
+
+td {
+    color: #aaa;
+    font-size: 13px;
+}
+
+td:first-child {
+    color: #eee;
+    font-weight: 700;
+}
+
+.method-note {
+    margin-top: 25px;
+    padding: 20px;
+    border-left: 3px solid var(--gold);
+    background: #0c0c0c;
+    color: #999;
+    font-size: 13px;
+}
+
+.back {
+    display: inline-flex;
+    margin-top: 30px;
+    padding: 11px 17px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--gold);
+    font-size: 13px;
+    transition: .25s ease;
+}
+
+.back:hover {
+    background: rgba(212,175,55,.08);
+}
+
+footer {
+    border-top: 1px solid rgba(212,175,55,.15);
+    padding: 45px 30px;
+    text-align: center;
+    color: #777;
+    font-size: 13px;
+}
+
+footer strong {
+    display: block;
+    color: var(--gold);
+    letter-spacing: 3px;
+    font-size: 18px;
+    margin-bottom: 7px;
+}
+
+@media (max-width: 950px) {
+    .factor-index {
+        grid-template-columns: repeat(2,1fr);
+    }
+
+    .factor-summary {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 750px) {
+    .navbar {
+        padding: 15px 20px;
+        align-items: flex-start;
+        gap: 15px;
+        flex-direction: column;
+    }
+
+    .navbar nav {
+        gap: 15px;
+    }
+
+    .hero,
+    .section,
+    .factor {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .factor-header {
+        grid-template-columns: 1fr;
+    }
+
+    .subfactor-grid,
+    .formula-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .complete {
+        grid-column: auto;
+    }
+}
+
+@media (max-width: 500px) {
+    .factor-index {
+        grid-template-columns: 1fr;
+    }
+
+    .hero {
+        min-height: auto;
+        padding-top: 80px;
+    }
+
+    .hero h1 {
+        font-size: 55px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header class="navbar">
+    <a href="index.html" class="logo">BOND</a>
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="index.html#framework">Framework</a>
+        <a href="index.html#factors" class="active">Five Factors</a>
+        <a href="index.html#prototype">Prototype</a>
+        <a href="index.html#research">Research</a>
+    </nav>
+</header>
+
+<main>
+
+<section class="hero">
+    <div class="hero-content">
+        <p class="eyebrow">BOND CORE ARCHITECTURE</p>
+        <h1>Five Factors</h1>
+        <h2>The structure behind BOND evaluation</h2>
+        <p class="description">
+            BOND organizes Human–AI interaction evaluation into five core
+            factors. Each factor contains five sub-factors, creating a
+            25-sub-factor structure for examining how an AI understands,
+            communicates, adapts, remains reliable, and responds throughout
+            interaction.
+        </p>
+
+        <div class="hero-meta">
+            <div class="meta-pill"><strong>5</strong> Core Factors</div>
+            <div class="meta-pill"><strong>25</strong> Sub-Factors</div>
+            <div class="meta-pill"><strong>5 × 5</strong> Architecture</div>
+            <div class="meta-pill"><strong>Equal</strong> Factor Weighting</div>
+        </div>
+    </div>
+</section>
+
+<section class="section" id="overview">
+    <div class="section-title">
+        <p class="eyebrow">ARCHITECTURE</p>
+        <h2>Five-factor map</h2>
+        <p>
+            Select a factor to jump directly to its definition, purpose,
+            and five constituent sub-factors.
+        </p>
+    </div>
+
+    <div class="factor-index">
+        <a class="index-link" href="#understanding">
+            <span>01</span>
+            <strong>Understanding</strong>
+        </a>
+        <a class="index-link" href="#clarity">
+            <span>02</span>
+            <strong>Clarity</strong>
+        </a>
+        <a class="index-link" href="#personalization">
+            <span>03</span>
+            <strong>Personalization</strong>
+        </a>
+        <a class="index-link" href="#reliability">
+            <span>04</span>
+            <strong>Reliability</strong>
+        </a>
+        <a class="index-link" href="#engagement">
+            <span>05</span>
+            <strong>Engagement &amp; Responsiveness</strong>
+        </a>
+    </div>
+</section>
+
+<!-- =======================================================
+     FACTOR 01
+     ======================================================= -->
+
+<section class="factor" id="understanding">
+    <div class="factor-header">
+        <div class="factor-number">01</div>
+        <div>
+            <p class="eyebrow">FACTOR 01</p>
+            <h2>Understanding</h2>
+            <p>
+                How effectively the AI interprets requirements, intent,
+                context, constraints, and changes in the user's request.
+            </p>
+        </div>
+    </div>
+
+    <div class="factor-summary">
+        <div class="summary-card">
+            <h3>WHAT IT REPRESENTS</h3>
+            <p>
+                Understanding examines whether the system can identify what
+                the user is actually asking for rather than responding only
+                to isolated words. It covers the recognition of requirements,
+                intended meaning, relevant context, explicit constraints,
+                and later clarifications or updates.
+            </p>
+        </div>
+        <div class="summary-card weight">
+            <span>FACTOR WEIGHT</span>
+            <strong>20%</strong>
+            <span>Equal-weight BOND architecture</span>
+        </div>
+    </div>
+
+    <div class="subfactor-grid">
+
+        <article class="subfactor">
+            <span class="code">UR</span>
+            <h3>Requirement Recognition</h3>
+            <p>
+                Identifying the explicit task, requested output, and
+                requirements contained in the user's message.
+            </p>
+            <div class="measure"><strong>Measures:</strong> recognition of what must be done.</div>
+        </article>
+
+        <article class="subfactor">
+            <span class="code">UI</span>
+            <h3>Intent Interpretation</h3>
+            <p>
+                Interpreting the intended meaning or objective behind the
+                user's wording.
+            </p>
+            <div class="measure"><strong>Measures:</strong> understanding of what the user means.</div>
+        </article>
+
+        <article class="subfactor">
+            <span class="code">UC</span>
+            <h3>Context Integration</h3>
+            <p>
+                Incorporating relevant information from the current
+                interaction when it affects the response.
+            </p>
+            <div class="measure"><strong>Measures:</strong> use of relevant interaction context.</div>
+        </article>
+
+        <article class="subfactor">
+            <span class="code">UCR</span>
+            <h3>Constraint Recognition</h3>
+            <p>
+                Detecting and respecting explicit limits such as format,
+                length, scope, or requested conditions.
+            </p>
+            <div class="measure"><strong>Measures:</strong> recognition of response constraints.</div>
+        </article>
+
+        <article class="subfactor">
+            <span class="code">UU</span>
+            <h3>Clarification &amp; Update Handling</h3>
+            <p>
+                Incorporating clarifications, corrections, or updated
+                requirements as the interaction progresses.
+            </p>
+            <div class="measure"><strong>Measures:</strong> response to changed understanding.</div>
+        </article>
+
+    </div>
+
+    <a class="back" href="#overview">↑ Back to factor map</a>
+</section>
+
+<!-- =======================================================
+     FACTOR 02
+     ======================================================= -->
+
+<section class="factor" id="clarity">
+    <div class="factor-header">
+        <div class="factor-number">02</div>
+        <div>
+            <p class="eyebrow">FACTOR 02</p>
+            <h2>Clarity</h2>
+            <p>
+                How clearly and effectively the AI communicates information
+                so that the response can be understood and used.
+            </p>
+        </div>
+    </div>
+
+    <div class="factor-summary">
+        <div class="summary-card">
+            <h3>WHAT IT REPRESENTS</h3>
+            <p>
+                Clarity focuses on the quality of communication itself:
+                whether the response is understandable, organized, precise,
+                focused on the relevant task, and sufficiently explanatory
+                for the purpose of the interaction.
+            </p>
+        </div>
+        <div class="summary-card weight">
+            <span>FACTOR WEIGHT</span>
+            <strong>20%</strong>
+            <span>Equal-weight BOND architecture</span>
+        </div>
+    </div>
+
+    <div class="subfactor-grid">
+
+        <article class="subfactor">
+            <span class="code">CC</span>
+            <h3>Comprehensibility</h3>
+            <p>
+                How easily the intended meaning of the response can be
+                understood by the user.
+            </p>
+            <div class="measure"><strong>Measures:</strong> ease of understanding.</div>
+        </article>
+
+        <article class="subfactor">
+            <span class="code">CS</span>
+            <h3>Structural Organization</h3>
+            <p>
+                How logically the response is arranged through ordering,
+                grouping, and presentation.
+            </p>
+            <div class="measure"><strong>Measures:</strong> organization and flow.</div>
+        </article>
+
+        <article class="subfactor">
+            <span class="code">CP</span>
+            <h3>Precision</h3>
+            <p>
+                How accurately and specifically the response communicates
+                the information relevant to the task.
+            </p>
+            <div class="measure"><strong>Measures:</strong> specificity and precision.</div>
+        </article>
+
+        <article class="subfactor">
+            <span class="code">CR</span>
+            <h3>Relevance &amp; Focus</h3>
+            <p>
+                How closely the response remains focused on the user's
+                actual request without unnecessary deviation.
+            </p>
+            <div class="measure"><strong>Measures:</strong> relevance to the request.</div>
+        </article>
+
+        <article class="subfactor">
+            <span class="code">CE</span>
+            <h3>Explanatory Sufficiency</h3>
+            <p>
+                Whether the response provides enough explanation to make
+                the answer useful for the intended purpose.
+            </p>
+            <div class="measure"><strong>Measures:</strong> adequacy of explanation.</div>
+        </article>
+
+    </div>
+
+    <a class="back" href="#overview">↑ Back to factor map</a>
+</section>
+
+<!-- =======================================================
+     FACTOR 03
+     ======================================================= -->
+
+<section class="factor" id="personalization">
+    <div class="factor-header">
+        <div class="factor-number">03</div>
+        <div>
+            <p class="eyebrow">FACTOR 03</p>
+            <h2>Personalization</h2>
+            <p>
+                How appropriately the AI adapts to relevant human context,
+                user-level needs, preferences, goals, and situation.
+            </p>
+        </div>
+    </div>
+
+    <div class="factor-summary">
+        <div class="summary-card">
+            <h3>WHAT IT REPRESENTS</h3>
+            <p>
+                Personalization examines selective adaptation rather than
+                simply adding more personal information. The factor focuses
+                on recognizing relevant context, adapting to the user's
+                level and preferences, responding to goals and situations,
+                and using context only when it is useful to the interaction.
+            </p>
+        </div>
+        <div class="summary-card weight">
+            <span>FACTOR WEIGHT</span>
+            <strong>20%</strong>
+            <span>Equal-weight BOND architecture</span>
+        </div>
+    </div>
+
+    <div class="subfactor-grid">
+
+        <article class="subfactor">
+            <span class="code">PCR</span>
+            <h3>Relevant Context Recognition</h3>
+            <p>
+                Recognizing which available human or interaction context
+                is relevant to the current task.
+            </p>
+            <div class="measure"><strong>Measures:</strong> relevance of context recognition.</div>
+        </article>
+
+        <article class="subfactor">
+            <span class="code">PLA</span>
+            <h3>User-Level Adaptation</h3>
+            <p>
+                Adjusting explanation, complexity, or communication style
+                to the apparent level of the user.
+            </p>
+            <div class="measure"><strong>Measures:</strong> adaptation to user level.</div>
+        </article>
+
+        <article class="subfactor">
+            <span class="code">PPA</span>
+            <h3>Preference Adaptation</h3>
+            <p>
+                Respecting relevant preferences expressed during the
+                interaction.
+            </p>
+            <div class="measure"><strong>Measures:</strong> use of stated preferences.</div>
+        </article>
+
+        <article class="subfactor">
+            <span class="code">PGS</span>
+            <h3>Goal &amp; Situation Adaptation</h3>
+            <p>
+                Adapting the response to the user's current goal and
+                situation when those factors affect the task.
+            </p>
+            <div class="measure"><strong>Measures:</strong> fit to goal and situation.</div>
+        </article>
+
+        <article class="subfactor">
+            <span class="code">PSC</span>
+            <h3>Selective Context Use</h3>
+            <p>
+                Using relevant context without unnecessarily inserting
+                unrelated or distracting personal information.
+            </p>
+            <div class="measure"><strong>Measures:</strong> appropriate and selective context use.</div>
+        </article>
+
+    </div>
+
+    <a class="back" href="#overview">↑ Back to factor map</a>
+</section>
+
+<!-- =======================================================
+     FACTOR 04
+     ======================================================= -->
+
+<section class="factor" id="reliability">
+    <div class="factor-header">
+        <div class="factor-number">04</div>
+        <div>
+            <p class="eyebrow">FACTOR 04</p>
+            <h2>Reliability</h2>
+            <p>
+                How consistently the AI maintains appropriate interaction
+                behavior across turns and handles uncertainty or errors.
+            </p>
+        </div>
+    </div>
+
+    <div class="factor-summary">
+        <div class="summary-card">
+            <h3>WHAT IT REPRESENTS</h3>
+            <p>
+                Reliability concerns consistency over time. It examines
+                whether interaction behavior remains stable, whether
+                relevant context and constraints persist, whether
+                uncertainty is communicated appropriately, and whether
+                the system can recover from mistakes or failed turns.
+            </p>
+        </div>
+        <div class="summary-card weight">
+            <span>FACTOR WEIGHT</span>
+            <strong>20%</strong>
+            <span>Equal-weight BOND architecture</span>
+        </div>
+    </div>
+
+    <div class="subfactor-grid">
+
+        <article class="subfactor">
+            <span class="code">RBC</span>
+            <h3>Behavioral Consistency</h3>
+            <p>
+                Maintaining appropriate response behavior rather than
+                changing unpredictably across comparable interaction states.
+            </p>
+            <div class="measure"><strong>Measures:</strong> consistency of interaction behavior.</div>
+        </article>
+
+        <article class="subfactor">
+            <span class="code">RCC</span>
+            <h3>Contextual Continuity</h3>
+            <p>
+                Maintaining continuity with relevant information already
+                established in the interaction.
+            </p>
+            <div class="measure"><strong>Measures:</strong> continuity across turns.</div>
+        </article>
+
+        <article class="subfactor">
+            <span class="code">RCP</span>
+            <h3>Constraint Persistence</h3>
+            <p>
+                Continuing to respect relevant constraints after they have
+                been established.
+            </p>
+            <div class="measure"><strong>Measures:</strong> persistence of requirements.</div>
+        </article>
+
+        <article class="subfactor">
+            <span class="code">RUC</span>
+            <h3>Uncertainty Calibration</h3>
+            <p>
+                Communicating uncertainty appropriately when the system
+                lacks sufficient confidence or information.
+            </p>
+            <div class="measure"><strong>Measures:</strong> appropriate handling of uncertainty.</div>
+        </article>
+
+        <article class="subfactor">
+            <span class="code">RER</span>
+            <h3>Error Recovery</h3>
+            <p>
+                Correcting or recovering from an identified mistake while
+                continuing the interaction appropriately.
+            </p>
+            <div class="measure"><strong>Measures:</strong> recovery after errors or corrections.</div>
+        </article>
+
+    </div>
+
+    <a class="back" href="#overview">↑ Back to factor map</a>
+</section>
+
+<!-- =======================================================
+     FACTOR 05
+     ======================================================= -->
+
+<section class="factor" id="engagement">
+    <div class="factor-header">
+        <div class="factor-number">05</div>
+        <div>
+            <p class="eyebrow">FACTOR 05</p>
+            <h2>Engagement &amp; Responsiveness</h2>
+            <p>
+                How effectively the AI recognizes interaction signals and
+                adapts as the interaction evolves toward the user's goal.
+            </p>
+        </div>
+    </div>
+
+    <div class="factor-summary">
+        <div class="summary-card">
+            <h3>WHAT IT REPRESENTS</h3>
+            <p>
+                Engagement &amp; Responsiveness focuses on the dynamic side
+                of interaction. It examines whether the AI notices signals
+                from the user, responds to feedback, understands progression,
+                continues adaptively, and keeps its responses oriented toward
+                the user's goal.
+            </p>
+        </div>
+        <div class="summary-card weight">
+            <span>FACTOR WEIGHT</span>
+            <strong>20%</strong>
+            <span>Equal-weight BOND architecture</span>
+        </div>
+    </div>
+
+    <div class="subfactor-grid">
+
+        <article class="subfactor">
+            <span class="code">ERS</span>
+            <h3>Interaction Signal Recognition</h3>
+            <p>
+                Recognizing meaningful signals contained in the user's
+                wording, feedback, corrections, or interaction behavior.
+            </p>
+            <div class="measure"><strong>Measures:</strong> recognition of interaction signals.</div>
+        </article>
+
+        <article class="subfactor">
+            <span class="code">ERF</span>
+            <h3>Feedback Responsiveness</h3>
+            <p>
+                Adjusting the response appropriately when the user provides
+                feedback about what is or is not working.
+            </p>
+            <div class="measure"><strong>Measures:</strong> response to feedback.</div>
+        </article>
+
+        <article class="subfactor">
+            <span class="code">ERP</span>
+            <h3>Progression Awareness</h3>
+            <p>
+                Understanding where the interaction currently stands and
+                what has already been completed or established.
+            </p>
+            <div class="measure"><strong>Measures:</strong> awareness of interaction progression.</div>
+        </article>
+
+        <article class="subfactor">
+            <span class="code">ERA</span>
+            <h3>Adaptive Continuation</h3>
+            <p>
+                Continuing the interaction in a way that incorporates
+                previous turns and newly relevant information.
+            </p>
+            <div class="measure"><strong>Measures:</strong> adaptation across continued interaction.</div>
+        </article>
+
+        <article class="subfactor">
+            <span class="code">ERG</span>
+            <h3>Goal-Oriented Engagement</h3>
+            <p>
+                Keeping interaction behavior aligned with the user's
+                underlying objective rather than engagement for its own sake.
+            </p>
+            <div class="measure"><strong>Measures:</strong> alignment with the user's goal.</div>
+        </article>
+
+    </div>
+
+    <a class="back" href="#overview">↑ Back to factor map</a>
+</section>
+
+<!-- =======================================================
+     CALCULATION
+     ======================================================= -->
+
+<section class="section formula-section" id="calculation">
+    <div class="section-title">
+        <p class="eyebrow">BOND CALCULATION</p>
+        <h2>From 25 sub-factors to one framework score</h2>
+        <p>
+            The current BOND architecture uses equal weighting at each
+            level. Each factor is the average of its five sub-factor scores,
+            and the overall BOND score is the average of the five factors.
+        </p>
+    </div>
+
+    <div class="formula-grid">
+
+        <div class="formula-card">
+            <h3>Understanding</h3>
+            <code class="formula">U = (UR + UI + UC + UCR + UU) / 5</code>
+            <p>
+                Five Understanding sub-factors contribute equally to the
+                Understanding factor.
+            </p>
+        </div>
+
+        <div class="formula-card">
+            <h3>Clarity</h3>
+            <code class="formula">C = (CC + CS + CP + CR + CE) / 5</code>
+            <p>
+                Five Clarity sub-factors contribute equally to the Clarity
+                factor.
+            </p>
+        </div>
+
+        <div class="formula-card">
+            <h3>Personalization</h3>
+            <code class="formula">P = (PCR + PLA + PPA + PGS + PSC) / 5</code>
+            <p>
+                Five Personalization sub-factors contribute equally to the
+                Personalization factor.
+            </p>
+        </div>
+
+        <div class="formula-card">
+            <h3>Reliability</h3>
+            <code class="formula">R = (RBC + RCC + RCP + RUC + RER) / 5</code>
+            <p>
+                Five Reliability sub-factors contribute equally to the
+                Reliability factor.
+            </p>
+        </div>
+
+        <div class="formula-card complete">
+            <h3>Engagement &amp; Responsiveness</h3>
+            <code class="formula">ER = (ERS + ERF + ERP + ERA + ERG) / 5</code>
+            <p>
+                Five Engagement &amp; Responsiveness sub-factors contribute
+                equally to the factor.
+            </p>
+        </div>
+
+        <div class="formula-card complete">
+            <h3>Overall BOND</h3>
+            <code class="formula">BOND = (U + C + P + R + ER) / 5</code>
+            <p>
+                The five core factors are equally weighted in the current
+                framework.
+            </p>
+        </div>
+
+    </div>
+
+    <div class="method-note">
+        <strong>Interpretation:</strong>
+        The numerical scoring scale and empirical validation of these
+        measurements are part of the experimental BOND research prototype.
+        This page defines the framework architecture and calculation
+        structure; it does not claim that the framework has already been
+        scientifically validated.
+    </div>
+</section>
+
+<!-- =======================================================
+     25 SUB-FACTOR TABLE
+     ======================================================= -->
+
+<section class="section" id="subfactor-table">
+    <div class="section-title">
+        <p class="eyebrow">RESEARCH REFERENCE</p>
+        <h2>25-sub-factor reference table</h2>
+        <p>
+            A compact reference of the current BOND architecture for
+            research, implementation, and prototype development.
+        </p>
+    </div>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Factor</th>
+                    <th>Code</th>
+                    <th>Sub-Factor</th>
+                    <th>Primary focus</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>Understanding</td>
+                    <td>UR</td>
+                    <td>Requirement Recognition</td>
+                    <td>What the user explicitly requires</td>
+                </tr>
+                <tr>
+                    <td>Understanding</td>
+                    <td>UI</td>
+                    <td>Intent Interpretation</td>
+                    <td>What the user intends</td>
+                </tr>
+                <tr>
+                    <td>Understanding</td>
+                    <td>UC</td>
+                    <td>Context Integration</td>
+                    <td>Relevant interaction context</td>
+                </tr>
+                <tr>
+                    <td>Understanding</td>
+                    <td>UCR</td>
+                    <td>Constraint Recognition</td>
+                    <td>Explicit response constraints</td>
+                </tr>
+                <tr>
+                    <td>Understanding</td>
+                    <td>UU</td>
+                    <td>Clarification &amp; Update Handling</td>
+                    <td>Updated requirements and clarification</td>
+                </tr>
+
+                <tr>
+                    <td>Clarity</td>
+                    <td>CC</td>
+                    <td>Comprehensibility</td>
+                    <td>Ease of understanding</td>
+                </tr>
+                <tr>
+                    <td>Clarity</td>
+                    <td>CS</td>
+                    <td>Structural Organization</td>
+                    <td>Logical structure and flow</td>
+                </tr>
+                <tr>
+                    <td>Clarity</td>
+                    <td>CP</td>
+                    <td>Precision</td>
+                    <td>Specificity and precision</td>
+                </tr>
+                <tr>
+                    <td>Clarity</td>
+                    <td>CR</td>
+                    <td>Relevance &amp; Focus</td>
+                    <td>Staying on the requested task</td>
+                </tr>
+                <tr>
+                    <td>Clarity</td>
+                    <td>CE</td>
+                    <td>Explanatory Sufficiency</td>
+                    <td>Adequacy of explanation</td>
+                </tr>
+
+                <tr>
+                    <td>Personalization</td>
+                    <td>PCR</td>
+                    <td>Relevant Context Recognition</td>
+                    <td>Recognizing useful context</td>
+                </tr>
+                <tr>
+                    <td>Personalization</td>
+                    <td>PLA</td>
+                    <td>User-Level Adaptation</td>
+                    <td>Adapting to user level</td>
+                </tr>
+                <tr>
+                    <td>Personalization</td>
+                    <td>PPA</td>
+                    <td>Preference Adaptation</td>
+                    <td>Respecting relevant preferences</td>
+                </tr>
+                <tr>
+                    <td>Personalization</td>
+                    <td>PGS</td>
+                    <td>Goal &amp; Situation Adaptation</td>
+                    <td>Fit to goal and situation</td>
+                </tr>
+                <tr>
+                    <td>Personalization</td>
+                    <td>PSC</td>
+                    <td>Selective Context Use</td>
+                    <td>Using context selectively</td>
+                </tr>
+
+                <tr>
+                    <td>Reliability</td>
+                    <td>RBC</td>
+                    <td>Behavioral Consistency</td>
+                    <td>Stable interaction behavior</td>
+                </tr>
+                <tr>
+                    <td>Reliability</td>
+                    <td>RCC</td>
+                    <td>Contextual Continuity</td>
+                    <td>Continuity across interaction</td>
+                </tr>
+                <tr>
+                    <td>Reliability</td>
+                    <td>RCP</td>
+                    <td>Constraint Persistence</td>
+                    <td>Maintaining established constraints</td>
+                </tr>
+                <tr>
+                    <td>Reliability</td>
+                    <td>RUC</td>
+                    <td>Uncertainty Calibration</td>
+                    <td>Appropriate uncertainty handling</td>
+                </tr>
+                <tr>
+                    <td>Reliability</td>
+                    <td>RER</td>
+                    <td>Error Recovery</td>
+                    <td>Recovery after identified errors</td>
+                </tr>
+
+                <tr>
+                    <td>Engagement &amp; Responsiveness</td>
+                    <td>ERS</td>
+                    <td>Interaction Signal Recognition</td>
+                    <td>Recognizing interaction signals</td>
+                </tr>
+                <tr>
+                    <td>Engagement &amp; Responsiveness</td>
+                    <td>ERF</td>
+                    <td>Feedback Responsiveness</td>
+                    <td>Responding to user feedback</td>
+                </tr>
+                <tr>
+                    <td>Engagement &amp; Responsiveness</td>
+                    <td>ERP</td>
+                    <td>Progression Awareness</td>
+                    <td>Awareness of interaction progress</td>
+                </tr>
+                <tr>
+                    <td>Engagement &amp; Responsiveness</td>
+                    <td>ERA</td>
+                    <td>Adaptive Continuation</td>
+                    <td>Adapting across continued turns</td>
+                </tr>
+                <tr>
+                    <td>Engagement &amp; Responsiveness</td>
+                    <td>ERG</td>
+                    <td>Goal-Oriented Engagement</td>
+                    <td>Alignment with user goal</td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+    <a class="back" href="index.html#factors">← Return to Five Factors</a>
+</section>
+
+</main>
+
+<footer>
+    <strong>BOND</strong>
+    <p>Human–AI Connection Evaluation Framework</p>
+    <p>BOND — Experimental Research Prototype</p>
+</footer>
+
+</body>
+</html>
