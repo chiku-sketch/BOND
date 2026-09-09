@@ -51,7 +51,14 @@ CORS(app)
 
 LLAMA_SERVER = "http://127.0.0.1:8080"
 
-MODEL_NAME = "Qwen2.5-0.5B"
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
+
+MODEL_NAME = (
+    GEMINI_MODEL
+    if GEMINI_API_KEY
+    else "Qwen2.5-0.5B"
+)
 
 BOND_VERSION = "BOND-V2.0"
 
@@ -811,6 +818,98 @@ def call_ai(
     temperature=DEFAULT_TEMPERATURE
 ):
 
+    # =====================================================
+    # GEMINI PROVIDER
+    # =====================================================
+
+    if GEMINI_API_KEY:
+
+        contents = []
+        system_instruction = None
+
+        for message in messages:
+
+            role = message.get("role")
+            content = message.get("content", "")
+
+            if role == "system":
+
+                system_instruction = {
+                    "parts": [
+                        {
+                            "text": content
+                        }
+                    ]
+                }
+
+            elif role == "user":
+
+                contents.append({
+                    "role": "user",
+                    "parts": [
+                        {
+                            "text": content
+                        }
+                    ]
+                })
+
+            elif role == "assistant":
+
+                contents.append({
+                    "role": "model",
+                    "parts": [
+                        {
+                            "text": content
+                        }
+                    ]
+                })
+
+
+        payload = {
+            "contents": contents,
+            "generationConfig": {
+                "maxOutputTokens": max_tokens,
+                "temperature": temperature
+            }
+        }
+
+
+        if system_instruction:
+
+            payload["systemInstruction"] = (
+                system_instruction
+            )
+
+
+        response = requests.post(
+
+            f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent",
+
+            headers={
+                "x-goog-api-key": GEMINI_API_KEY,
+                "Content-Type": "application/json"
+            },
+
+            json=payload,
+
+            timeout=REQUEST_TIMEOUT
+        )
+
+
+        response.raise_for_status()
+
+        data = response.json()
+
+        return (
+            data["candidates"][0]["content"]["parts"][0]["text"]
+            .strip()
+        )
+
+
+    # =====================================================
+    # LOCAL QWEN FALLBACK
+    # =====================================================
+
     response = requests.post(
 
         f"{LLAMA_SERVER}/v1/chat/completions",
@@ -836,8 +935,6 @@ def call_ai(
         data["choices"][0]["message"]["content"]
         .strip()
     )
-
-
 # =========================================================
 # BASELINE AI
 # =========================================================
