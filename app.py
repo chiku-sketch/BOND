@@ -273,37 +273,29 @@ def factor():
 @app.route("/api/status")
 def status():
 
-    try:
+    if GEMINI_API_KEY:
+        ai_online = True
+    else:
+        try:
+            response = requests.get(
+                f"{LLAMA_SERVER}/health",
+                timeout=5
+            )
 
-        response = requests.get(
-            f"{LLAMA_SERVER}/health",
-            timeout=5
-        )
+            ai_online = response.status_code == 200
 
-        ai_online = response.status_code == 200
-
-    except requests.RequestException:
-
-        ai_online = False
+        except requests.RequestException:
+            ai_online = False
 
     return jsonify({
-
         "status": "online",
-
         "system": "BOND",
-
         "model": MODEL_NAME,
-
         "bond": BOND_VERSION,
-
         "ahi": AHI_VERSION,
-
         "factors": 5,
-
         "ai_server": ai_online
-
     })
-
 
 # =========================================================
 # BASIC TEXT UTILITIES
